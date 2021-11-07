@@ -1,4 +1,5 @@
-import { List, Record } from 'immutable';
+import { List, OrderedMap, Record } from 'immutable';
+import { RuntimeType } from './runtime';
 
 export class Location extends Record<{file: string, line: number, col: number}>({file: '<none>', line: 0, col: 0}) {
   constructor(file: string, line: number, col: number) {
@@ -11,8 +12,6 @@ export class Location extends Record<{file: string, line: number, col: number}>(
     throw new Error(`${message} at ${this.line}:${this.col} in ${this.file}`)
   }
 }
-
-export type LiteralType = string | boolean | number | null;
 
 interface BaseToken {
   loc: Location;
@@ -36,7 +35,7 @@ export interface NumberToken extends BaseToken {
 
 export interface LiteralToken extends BaseToken {
   kind: 'literal';
-  value: LiteralType;
+  value: RuntimeType;
 }
 
 export interface SymbolToken extends BaseToken {
@@ -71,8 +70,8 @@ const noOp = NoOpExpression.instance;
 
 export class SExpression extends Record<{ kind: 'sExpression', loc: Location, head: Expression, body: List<Expression> }>({ kind: 'sExpression', loc: nullLocation, head: noOp, body: List() }) implements BaseExpression {
 
-  constructor(args: {loc: Location, head: Expression, body: List<Expression>}) {
-    super(args);
+  constructor(loc: Location, head: Expression, body: List<Expression>) {
+    super({loc, head, body});
   }
 
   /**
@@ -92,36 +91,36 @@ export class SExpression extends Record<{ kind: 'sExpression', loc: Location, he
   }
 }
 
-export class ArrayExpression extends Record<{kind: 'arrayExpression', loc: Location, body: List<Expression>}>({kind: 'arrayExpression', loc: nullLocation, body: List()}) implements BaseExpression {
+export class ListExpression extends Record<{kind: 'arrayExpression', loc: Location, body: List<Expression>}>({kind: 'arrayExpression', loc: nullLocation, body: List()}) implements BaseExpression {
 
-  constructor(args: {loc: Location, body: List<Expression>}) {
-    super(args);
+  constructor(loc: Location, body: List<Expression>) {
+    super({loc, body});
   }
 
   visit(visitor: Visitor): Expression {
     const full = this.set('body', this.body.map(it => it.visit(visitor)));
 
-    return visitor.arrayExpression?.(full) ?? full;
+    return visitor.listExpression?.(full) ?? full;
   }
 }
 
-export class MapExpression extends Record<{kind: 'mapExpression', loc: Location, body: List<readonly [Expression, Expression]>}>({kind: 'mapExpression', loc: nullLocation, body: List()}) implements BaseExpression {
+export class MapExpression extends Record<{kind: 'mapExpression', loc: Location, body: OrderedMap<Expression, Expression>}>({kind: 'mapExpression', loc: nullLocation, body: OrderedMap()}) implements BaseExpression {
 
-  constructor(args: {loc: Location, body: List<readonly [Expression, Expression]>}) {
-    super(args);
+  constructor(loc: Location, body: OrderedMap<Expression, Expression>) {
+    super({loc, body});
   }
 
   visit(visitor: Visitor): Expression {
-    const full = this.set('body', this.body.map(([key, value]) => [key.visit(visitor), value.visit(visitor)] as const));
+    const full = this.set('body', this.body.mapKeys(key => key.visit(visitor)).map(value => value.visit(visitor)));
 
     return visitor.mapExpression?.(full) ?? full;
   }
 }
 
-export class ValueExpression extends Record<{kind: 'value', loc: Location, quoted: boolean, value: LiteralType}>({kind: 'value', loc: nullLocation, quoted: false, value: null}) implements BaseExpression {
+export class ValueExpression extends Record<{kind: 'value', loc: Location, quoted: boolean, value: RuntimeType}>({kind: 'value', loc: nullLocation, quoted: false, value: null}) implements BaseExpression {
 
-  constructor(args: {loc: Location, quoted: boolean, value: LiteralType}) {
-    super(args);
+  constructor(loc: Location, quoted: boolean, value: RuntimeType) {
+    super({loc, quoted, value});
   }
 
   visit(visitor: Visitor): Expression {
@@ -131,8 +130,8 @@ export class ValueExpression extends Record<{kind: 'value', loc: Location, quote
 
 export class VariableExpression extends Record<{kind: 'variable', loc: Location, name: string}>({kind: 'variable', loc: nullLocation, name: ''}) implements BaseExpression {
 
-  constructor(args: {loc: Location, name: string}) {
-    super(args);
+  constructor(loc: Location, name: string) {
+    super({loc, name});
   }
 
   visit(visitor: Visitor): Expression {
@@ -140,11 +139,11 @@ export class VariableExpression extends Record<{kind: 'variable', loc: Location,
   }
 }
 
-export type Expression = NoOpExpression | SExpression | ArrayExpression | MapExpression | ValueExpression | VariableExpression
+export type Expression = NoOpExpression | SExpression | ListExpression | MapExpression | ValueExpression | VariableExpression
 
 export interface Visitor {
   sExpression?(ex: SExpression): Expression;
-  arrayExpression?(ex: ArrayExpression): Expression;
+  listExpression?(ex: ListExpression): Expression;
   mapExpression?(ex: MapExpression): Expression;
   value?(ex: ValueExpression): Expression;
   variable?(ex: VariableExpression): Expression;

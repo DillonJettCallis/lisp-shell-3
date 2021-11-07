@@ -7,7 +7,7 @@ export class AutoVariable implements Visitor {
 
       if (!head.quoted && typeof head.value === 'string') {
         // if the first param is an unquoted string, replace it with a variable of the same name
-        return ex.set('head', new VariableExpression({loc: head.loc, name: head.value}));
+        return ex.set('head', new VariableExpression(head.loc, head.value));
       }
     }
 

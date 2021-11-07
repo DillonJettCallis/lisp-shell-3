@@ -15,17 +15,9 @@ export class DefnDeSugar implements Visitor {
 
       const [name, arr, body] = ex.body;
 
-      const fn = new SExpression({
-        loc: ex.head.loc,
-        head: new VariableExpression({loc: ex.head.loc, name: 'fn'}),
-        body: List([arr, body]),
-      });
+      const fn = new SExpression(ex.head.loc, new VariableExpression(ex.head.loc, 'fn'), List([arr, body]),);
 
-      return new SExpression({
-        loc: ex.loc,
-        head: new VariableExpression({loc: ex.head.loc, name: 'def'}),
-        body: List([name, fn]),
-      });
+      return new SExpression(ex.loc, new VariableExpression(ex.head.loc, 'def'), List([name, fn]),);
     } else {
       return ex;
     }

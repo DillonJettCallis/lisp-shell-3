@@ -1,4 +1,4 @@
-import { ArrayExpression, Expression, SExpression, VariableExpression, Visitor } from '../ast';
+import { Expression, ListExpression, SExpression, VariableExpression, Visitor } from '../ast';
 import { List } from 'immutable';
 
 /**
@@ -11,11 +11,11 @@ export class LambdaDeSugar implements Visitor {
 
   sExpression(ex: SExpression): Expression {
     if (ex.matchHead('\\')) {
-      const head = new VariableExpression({loc: ex.head.loc, name: 'fn'});
-      const execBody = new SExpression({loc: ex.loc, head: ex.body.first(), body: ex.body.shift()});
-      const args = new ArrayExpression({loc: ex.loc, body: List([])});
+      const head = new VariableExpression(ex.head.loc, 'fn');
+      const execBody = new SExpression(ex.loc, ex.body.first(), ex.body.shift());
+      const args = new ListExpression(ex.loc, List([]));
 
-      return new SExpression({loc: ex.loc, head, body: List([args, execBody]) });
+      return new SExpression(ex.loc, head, List([args, execBody]));
     } else {
       return ex;
     }

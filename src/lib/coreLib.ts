@@ -10,7 +10,7 @@ import {
   NormalFunction
 } from '../interpreter';
 import { isCollection, List, Map as ImmutableMap } from 'immutable';
-import { ArrayExpression, Expression, Location, VariableExpression } from '../ast';
+import { Expression, ListExpression, Location, VariableExpression } from '../ast';
 import { initShellLib } from './shellLib';
 import { initListLib } from './listLib';
 import { initParseLib } from './parseLib';
@@ -259,7 +259,7 @@ function letMacro(args: List<Expression>, loc: Location, interpreter: Interprete
 
   const [rawArgDefs, body] = args;
 
-  if (!(rawArgDefs instanceof ArrayExpression)) {
+  if (!(rawArgDefs instanceof ListExpression)) {
     return rawArgDefs.loc.fail('Expected a list of either a variable and value, or a list of variable value lists');
   }
 
@@ -269,14 +269,14 @@ function letMacro(args: List<Expression>, loc: Location, interpreter: Interprete
 
   const sample = rawArgDefs.body.first()!;
 
-  const pairs = sample instanceof ArrayExpression
+  const pairs = sample instanceof ListExpression
       ? rawArgDefs.body
       : sample instanceof VariableExpression
         ? List([rawArgDefs])
         : sample.loc.fail('Expected first argument to let to be either a list of variable value pairs or a single pair');
 
   pairs.forEach(pair => {
-    if (!(pair instanceof ArrayExpression)) {
+    if (!(pair instanceof ListExpression)) {
       return pair.loc.fail('Expected first argument to let to be either a list of variable value pairs or a single pair');
     }
 

@@ -1,4 +1,4 @@
-import { ArrayExpression, Expression, MapExpression, NoOpExpression, SExpression, Visitor } from '../ast';
+import { Expression, ListExpression, MapExpression, NoOpExpression, SExpression, Visitor } from '../ast';
 
 const noOp = NoOpExpression.instance;
 
@@ -12,11 +12,11 @@ export class NoOpRemover implements Visitor {
     return ex.set('body', ex.body.filter(it => it !== noOp));
   }
 
-  arrayExpression(ex: ArrayExpression): Expression {
+  listExpression(ex: ListExpression): Expression {
     return ex.set('body', ex.body.filter(it => it !== noOp));
   }
 
   mapExpression(ex: MapExpression): Expression {
-    return ex.set('body', ex.body.filter(it => it[0] !== noOp && it[1] !== noOp));
+    return ex.set('body', ex.body.filter((value, key) => key !== noOp && value !== noOp));
   }
 }

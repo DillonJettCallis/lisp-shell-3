@@ -1,6 +1,6 @@
 import { Expression, Location } from './ast';
 import { LocalScope, RuntimeType } from './runtime';
-import { List, Map as ImmutableMap } from 'immutable';
+import { List } from 'immutable';
 
 export type MacroFunction = (args: List<Expression>, loc: Location, interpreter: Interpreter, scope: LocalScope) => RuntimeType;
 export type EnvFunction  = (args: List<RuntimeType>, loc: Location, scope: LocalScope) => RuntimeType;
@@ -59,7 +59,9 @@ export class Interpreter {
       case 'arrayExpression':
         return ex.body.map(it => this.evaluate(it, scope));
       case 'mapExpression':
-        return ImmutableMap(ex.body.map(([key, value]) => [this.evaluate(key, scope), this.evaluate(value, scope)]));
+        return ex.body.toKeyedSeq()
+          .mapEntries(([key, value]) => [this.evaluate(key, scope), this.evaluate(value, scope)])
+          .toMap();
       case 'sExpression': {
         const func = this.evaluate(ex.head, scope);
 

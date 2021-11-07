@@ -1,6 +1,6 @@
 import {
-  ArrayExpression,
   Expression,
+  ListExpression,
   Location,
   SExpression,
   ValueExpression,
@@ -34,29 +34,26 @@ export class TryDeSugar implements Visitor {
         return maybeFinally.loc.fail('Expected third argument to try to be an sExpression');
       }
 
-      const tryBody = new SExpression({
-        head: new VariableExpression({
-          name: 'fn',
-          loc: bodyEx.loc,
-        }),
-        body: List([
-          new ArrayExpression({ loc: bodyEx.loc, body: List([]) }),
+      const tryBody = new SExpression(
+        bodyEx.loc,
+        new VariableExpression(bodyEx.loc, 'fn',),
+        List([
+          new ListExpression(bodyEx.loc, List()),
           bodyEx,
         ]),
-        loc: bodyEx.loc,
-      });
+      );
 
       const [catchEx, finallyEx] = evaluateCatchArguments(maybeCatch, maybeFinally, ex.loc);
 
-      return new SExpression({
-        head: ex.head,
-        body: List([
+      return new SExpression(
+        ex.loc,
+        ex.head,
+        List([
           tryBody,
           catchEx,
           finallyEx,
         ]),
-        loc: ex.loc,
-      });
+      );
     } else {
       return ex;
     }
@@ -107,17 +104,17 @@ function translateCatchBlock(catchBlock: SExpression): SExpression {
     return varEx.loc.fail('Expected first argument to catch block to be a variable');
   }
 
-  return new SExpression({
-    head: new VariableExpression({
-      name: 'fn',
-      loc: catchBlock.loc,
-    }),
-    body: List([
-      new ArrayExpression({loc: catchBlock.loc, body: List([varEx])}),
+  return new SExpression(
+    catchBlock.loc,
+    new VariableExpression(
+      catchBlock.loc,
+      'fn',
+    ),
+    List([
+      new ListExpression(catchBlock.loc, List([varEx])),
       bodyEx,
     ]),
-    loc: catchBlock.loc,
-  })
+  )
 }
 
 // input:
@@ -131,30 +128,27 @@ function translateFinallyBlock(finallyBlock: SExpression): SExpression {
 
   const bodyEx = finallyBlock.body.first()!;
 
-  return new SExpression({
-    head: new VariableExpression({
-      name: 'fn',
-      loc: finallyBlock.loc,
-    }),
-    body: List([
-      new ArrayExpression({loc: finallyBlock.loc, body: List([])}),
+  return new SExpression(
+    finallyBlock.loc,
+    new VariableExpression(
+      finallyBlock.loc,
+      'fn',
+    ),
+    List([
+      new ListExpression(finallyBlock.loc, List()),
       bodyEx,
     ]),
-    loc: finallyBlock.loc,
-  })
+  )
 }
 
 
 function emptyAction(loc: Location): SExpression {
-  return new SExpression({
-    head: new VariableExpression({
-      name: 'fn',
-      loc,
-    }),
-    body: List([
-      new ArrayExpression({loc, body: List([])}),
-      new ValueExpression({loc, quoted: false, value: null}),
-    ]),
+  return new SExpression(
     loc,
-  })
+    new VariableExpression(loc, 'fn',),
+    List([
+      new ListExpression(loc, List()),
+      new ValueExpression(loc, false, null),
+    ]),
+  )
 }

@@ -1,6 +1,6 @@
 import {
-  ArrayExpression,
   Expression,
+  ListExpression,
   Location,
   MapExpression,
   SExpression,
@@ -8,7 +8,7 @@ import {
   ValueExpression,
   VariableExpression
 } from './ast';
-import { List, Range } from 'immutable';
+import { List, OrderedMap, Range } from 'immutable';
 
 class Parser {
 
@@ -41,13 +41,13 @@ class Parser {
     } else if (next.kind === 'symbol' && next.value === '{') {
       return this.parseMapExpression(next.loc);
     } else if (next.kind === 'string') {
-      return new ValueExpression({value: next.value, quoted: next.quoted, loc: next.loc });
+      return new ValueExpression(next.loc, next.quoted, next.value);
     } else if (next.kind === 'number') {
-      return new ValueExpression({ value: next.value, quoted: false, loc: next.loc });
+      return new ValueExpression(next.loc, false, next.value);
     } else if (next.kind === 'variable') {
-      return new VariableExpression({name: next.value, loc: next.loc});
+      return new VariableExpression(next.loc, next.value);
     } else if (next.kind === 'literal') {
-      return new ValueExpression({value: next.value, quoted: false, loc: next.loc});
+      return new ValueExpression(next.loc, false, next.value);
     } else {
       return next.loc.fail('Unknown token type');
     }
@@ -64,13 +64,13 @@ class Parser {
 
     const body = params.shift();
 
-    return new SExpression({head, body, loc});
+    return new SExpression(loc, head, body);
   }
 
-  parseArrayExpression(loc: Location): ArrayExpression {
+  parseArrayExpression(loc: Location): ListExpression {
     const body = this.parseBraceExpression(']');
 
-    return new ArrayExpression({body, loc});
+    return new ListExpression(loc, body);
   }
 
   parseMapExpression(loc: Location): MapExpression {
@@ -81,10 +81,11 @@ class Parser {
     }
 
     const body = Range(0, params.size, 2)
-      .map(index => [params.get(index)!, params.get(index + 1)!] as const)
-      .toList();
+      .map(index => [params.get(index)!, params.get(index + 1)!] as [Expression, Expression]);
 
-    return new MapExpression({body, loc});
+    const map = OrderedMap(body.values())
+
+    return new MapExpression(loc, map);
   }
 
   parseBraceExpression(closeBrace: string): List<Expression> {

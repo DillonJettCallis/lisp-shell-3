@@ -10,15 +10,19 @@ import { LambdaDeSugar } from './transformer/lambdaDeSugar';
 import { DefnDeSugar } from './transformer/defnDeSugar';
 import { ExportShorthand } from './transformer/exportShorthand';
 import { TryDeSugar } from './transformer/tryDeSugar';
+import { MacroVerifier } from './transformer/macroVerifier';
+import { ConstantFolder } from './transformer/constantFolder';
 
 export class Loader {
 
   private readonly pipeline = new TransformerPipeline([
+    new MacroVerifier(),
     new TryDeSugar(),
     new LambdaDeSugar(),
     new DefnDeSugar(),
     new ExportShorthand(),
     new AutoVariable(),
+    new ConstantFolder(),
     new NoOpRemover(),
   ]);
 
@@ -31,7 +35,7 @@ export class Loader {
       return undefined;
     }
 
-    return this.pipeline.transform(new SExpression({ loc: Location.zero.set('file', file), head: ast.first()!, body: ast.shift() }));
+    return this.pipeline.transform(new SExpression(Location.zero.set('file', file), ast.first()!, ast.shift()));
   }
 
   loadFile(filePath: string): List<Expression> {
