@@ -1,6 +1,6 @@
 import { OsHandler, parseFile } from '../os';
 import { List, Map as ImmutableMap, Seq, Set as ImmutableSet } from 'immutable';
-import { EnvFunction, NormalFunction } from '../interpreter';
+import { EnvFunction } from '../interpreter';
 import { delimiter as osPathDelimiter, sep as osPathSeparator } from 'path';
 import { existsSync, readdirSync } from 'fs';
 import { doBuildShellFunction } from '../lib/shellLib';

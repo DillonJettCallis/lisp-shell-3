@@ -3,7 +3,7 @@ import { platform } from 'os';
 import { Windows } from './os/windows';
 import { Nix } from './os/nix';
 import { List, Map as ImmutableMap, Record } from 'immutable';
-import { EnvFunction, NormalFunction } from './interpreter';
+import { EnvFunction } from './interpreter';
 
 export interface OsHandler {
 
