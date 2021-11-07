@@ -3,14 +3,22 @@ import { LocalScope, RuntimeType } from './runtime';
 import { List, Map as ImmutableMap } from 'immutable';
 
 export type MacroFunction = (args: List<Expression>, loc: Location, interpreter: Interpreter, scope: LocalScope) => RuntimeType;
+export type EnvFunction  = (args: List<RuntimeType>, loc: Location, scope: LocalScope) => RuntimeType;
 export type NormalFunction = (args: List<RuntimeType>, loc: Location) => RuntimeType;
 
 export const normalFunctionSymbol = Symbol('NormalFunction');
+export const envFunctionSymbol = Symbol('EnvFunction');
 export const macroFunctionSymbol = Symbol('MacroFunction');
 
 export function markNormal(func: NormalFunction): NormalFunction {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
   (func as any)[normalFunctionSymbol] = true;
+  return func;
+}
+
+export function markEnv(func: EnvFunction): EnvFunction {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+  (func as any)[envFunctionSymbol] = true;
   return func;
 }
 
@@ -24,6 +32,12 @@ export function isNormalFunction(obj: unknown): obj is NormalFunction {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/ban-ts-comment
   // @ts-ignore
   return !!obj[normalFunctionSymbol];
+}
+
+export function isEnvFunction(obj: unknown): obj is EnvFunction {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  return !!obj[envFunctionSymbol];
 }
 
 export function isMacroFunction(obj: unknown): obj is MacroFunction {
@@ -53,6 +67,12 @@ export class Interpreter {
         if (isNormalFunction(func)) {
           const args = ex.body.map(it => this.evaluate(it, scope));
           return func(args, ex.loc);
+        }
+
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        if (isEnvFunction(func)) {
+          const args = ex.body.map(it => this.evaluate(it, scope));
+          return func(args, ex.loc, scope);
         }
 
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access

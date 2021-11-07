@@ -1,15 +1,14 @@
-import { EnvironmentScope, LibScope, LocalScope } from '../runtime';
-import { Loader } from '../loader';
-import { markMacro } from '../interpreter';
+import { EnvironmentScope, LibScope, LocalScope } from './runtime';
 import { List } from 'immutable';
+import { Expression, Location } from './ast';
+import { MacroFunction, markMacro } from './interpreter';
 import { dirname, resolve } from 'path';
-import { Expression, Location } from '../ast';
+import { Loader } from './loader';
 
-export const fileSourceDir = '(file source directory)';
-export const shellFlag = '(shellFlag)';
+const loader = new Loader();
 
-export function initImport(envScope: EnvironmentScope, loader: Loader) {
-  envScope.export('import', markMacro((args, loc, interpreter, scope) => {
+export function doImport(env: EnvironmentScope, baseDir?: string): MacroFunction {
+  return markMacro((args, loc, interpreter, scope) => {
     if (args.size !== 2) {
       return loc.fail('Expected exactly two arguments to import');
     }
@@ -24,21 +23,12 @@ export function initImport(envScope: EnvironmentScope, loader: Loader) {
 
     const importKind = chooseImportMode(namesEx, loc);
 
-    const isShell = scope.lookup(shellFlag, loc);
-    const baseDir = scope.lookup(isShell ? 'cwd' : fileSourceDir, loc);
-
-    if (typeof baseDir !== 'string') {
-      return loc.fail('Unexpected error. `cwd` seems to not be a string');
-    }
-
-    const fullPath = resolve(baseDir, path);
+    const fullPath = resolve(baseDir ?? env.cwd, path);
     const fullDir = dirname(fullPath);
 
     const ast = loader.loadFile(fullPath);
 
-    const libScope = envScope.createLib();
-    libScope.define(shellFlag, false);
-    libScope.define(fileSourceDir, fullDir);
+    const libScope = env.createLib(fullDir);
     const libLocal = libScope.childScope();
 
     ast.forEach(ex => {
@@ -48,10 +38,10 @@ export function initImport(envScope: EnvironmentScope, loader: Loader) {
     importKind(scope, libScope);
 
     return null;
-  }));
+  })
 }
 
-function chooseImportMode(ex: Expression, loc: Location): (localScope: LocalScope, libScope: LibScope) => void {
+export function chooseImportMode(ex: Expression, loc: Location): (localScope: LocalScope, libScope: LibScope) => void {
   if (ex.kind === 'value' && ex.value === '*') {
     return wildCardImport;
   }

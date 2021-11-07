@@ -1,13 +1,13 @@
 import { GlobalScopeBuilder } from './coreLib';
 import { isList, isMap as isImmutableMap, List, Map as ImmutableMap, Set as ImmutableSet } from 'immutable';
 import { Location } from '../ast';
-import { RuntimeType } from '../runtime';
-import { spawn } from 'child_process';
+import { LocalScope, RuntimeType } from '../runtime';
+import { spawn, SpawnOptionsWithoutStdio } from 'child_process';
 import deasync from 'deasync';
-import { markNormal, NormalFunction } from '../interpreter';
+import { EnvFunction, markEnv } from '../interpreter';
 
 export function initShellLib(builder: GlobalScopeBuilder): void {
-  builder.addFunction('execute', execute);
+  builder.addEnvFunction('execute', execute);
   builder.addFunction('@', buildShellFunction);
 }
 
@@ -29,13 +29,10 @@ function buildShellFunction(args: List<RuntimeType>, loc: Location): RuntimeType
  * Build a shell function out of a file path to an executable file.
  * @param path
  */
-export function doBuildShellFunction(path: string): NormalFunction {
-  const result: NormalFunction = ((realArgs, loc) => {
-    return execute(List([path, realArgs]), loc).get('stdout') ?? null;
+export function doBuildShellFunction(path: string): EnvFunction {
+  return markEnv((realArgs, loc, scope) => {
+    return execute(List([path, realArgs]), loc, scope).get('stdout') ?? null;
   });
-
-  markNormal(result);
-  return result;
 }
 
 type ExecStreamOptions = 'ignore' | 'keep' | 'forward';
@@ -52,8 +49,8 @@ interface ExecFlags {
   err: ExecStreamOptions;
 }
 
-function executeImpl(path: string, args: string[], flags: ExecFlags, callback: (err: any, result?: ExecResult) => void ): void {
-  const task = spawn(path, args);
+function executeImpl(path: string, args: string[], options: SpawnOptionsWithoutStdio, flags: ExecFlags, callback: (err: any, result?: ExecResult) => void ): void {
+  const task = spawn(path, args, options);
 
   let out: string | undefined;
   let err: string | undefined;
@@ -103,14 +100,13 @@ function executeImpl(path: string, args: string[], flags: ExecFlags, callback: (
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-const executeSync = deasync(executeImpl) as (path: string, args: string[], flags: ExecFlags) => ExecResult;
+const executeSync = deasync(executeImpl) as (path: string, args: string[], options: SpawnOptionsWithoutStdio, flags: ExecFlags) => ExecResult;
 
-
-function execute(args: List<RuntimeType>, loc: Location): ImmutableMap<string, RuntimeType> {
-  // (shell/exec "pathToProgram" [list of arguments] {optional map of flags})
+function execute(args: List<RuntimeType>, loc: Location, scope: LocalScope): ImmutableMap<string, RuntimeType> {
+  // (execute "pathToProgram" [list of arguments] {optional map of flags})
 
   if (args.isEmpty()) {
-    loc.fail('shell/exec requires at least one argument');
+    loc.fail('execute requires at least one argument');
   }
 
   const [path, argumentList = List(), flagsMap = ImmutableMap()] = args;
@@ -139,8 +135,9 @@ function execute(args: List<RuntimeType>, loc: Location): ImmutableMap<string, R
   }
 
   const stringifyArgs = argumentList.map(it => String(it)).toArray();
+  const { cwd, env } = scope.environment();
 
-  const result = executeSync(path, stringifyArgs, {out: outUse, err: errUse});
+  const result = executeSync(path, stringifyArgs, {cwd, env: Object.fromEntries(env)}, {out: outUse, err: errUse});
 
   return ImmutableMap(result);
 }

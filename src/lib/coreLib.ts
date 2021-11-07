@@ -1,5 +1,14 @@
 import { GlobalScope, LocalScope, RuntimeType } from '../runtime';
-import { Interpreter, isNormalFunction, MacroFunction, markMacro, markNormal, NormalFunction } from '../interpreter';
+import {
+  EnvFunction,
+  Interpreter,
+  isNormalFunction,
+  MacroFunction,
+  markEnv,
+  markMacro,
+  markNormal,
+  NormalFunction
+} from '../interpreter';
 import { isCollection, List, Map as ImmutableMap } from 'immutable';
 import { ArrayExpression, Expression, Location, VariableExpression } from '../ast';
 import { initShellLib } from './shellLib';
@@ -15,6 +24,11 @@ export class GlobalScopeBuilder {
 
   addFunction(name: string, func: NormalFunction): void {
     markNormal(func);
+    this.dict.set(name, func);
+  }
+
+  addEnvFunction(name: string, func: EnvFunction): void {
+    markEnv(func);
     this.dict.set(name, func);
   }
 
@@ -308,7 +322,7 @@ function doExport(args: List<Expression>, loc: Location, interpreter: Interprete
   const name = nameEx.name;
   const value = interpreter.evaluate(valueEx, scope);
 
-  scope.export(name, value);
+  scope.export(name, value, loc);
 
   return null;
 }

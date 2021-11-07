@@ -2,23 +2,25 @@ import { sep as osPathSeparator } from 'path';
 import { platform } from 'os';
 import { Windows } from './os/windows';
 import { Nix } from './os/nix';
+import { List, Map as ImmutableMap, Record } from 'immutable';
+import { EnvFunction, NormalFunction } from './interpreter';
 
 export interface OsHandler {
 
   /**
-   * From a file name, return the name that should be included in the shell. Might be the same.
+   * Load up all environment variables
    */
-  scriptName(name: string): string;
+  loadEnv(): ImmutableMap<string, string>
 
   /**
-   * From the name of an environment variable, what name should be included in the shell.
+   * Load up just the path variable
    */
-  envVariableName(name: string): string;
+  pathVar(): string;
 
   /**
-   * Is this file an executable?
+   * From the given path, parse and load up all shell functions available
    */
-  isExecutable(fullFileName: string): boolean;
+  loadPath(path: string): ImmutableMap<string, EnvFunction>
 
 }
 
@@ -33,6 +35,25 @@ export function chooseOs(): OsHandler {
   }
 }
 
+export class File extends Record<{
+  dir: List<string>;
+  name: string;
+  ext: string;
+}> ({
+  dir: List([]),
+  name: '',
+  ext: '',
+}) {
+
+  constructor(dir: List<string>, name: string, ext: string) {
+    super({dir, name, ext});
+  }
+
+  fullPath(): string {
+    return this.dir.join(osPathSeparator) + osPathSeparator + this.name + '.' + this.ext;
+  }
+}
+
 /**
  * Parse a file path into it's components
  *
@@ -42,16 +63,16 @@ export function chooseOs(): OsHandler {
  *
  * @param path
  */
-export function parseFile(path: string): {dir: string[], name: string, ext: string} {
+export function parseFile(path: string): File {
   const lastSlash = path.lastIndexOf(osPathSeparator);
 
   const dirPath = lastSlash === -1 ? null : path.substring(0, lastSlash);
-  const dir = dirPath == null ? [] : dirPath.split(osPathSeparator);
+  const dir = List(dirPath == null ? [] : dirPath.split(osPathSeparator));
 
   const fileName = path.substring(lastSlash + 1);
   const dotIndex = fileName.lastIndexOf('.');
   const name = dotIndex === -1 ? fileName : fileName.substring(0, dotIndex);
   const ext = dotIndex === -1 ? '' : fileName.substring(dotIndex + 1);
 
-  return {dir, name, ext};
+  return new File(dir, name, ext);
 }
