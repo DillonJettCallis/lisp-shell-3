@@ -458,16 +458,20 @@ There is no shame in using `fn` functions to make the code easier to understand.
 ### Special functions
 
 The following are special functions that CAN NOT be used as higher order
-functions. (You can try, but they won't work)
+functions. They won't work, so it's an eager error to use any of them
+like that. You are also forbidden from declaring your own variables 
+with any of their names.
 
 1. def
 2. defn
 3. fn
-4. let
-5. try
+4. \\
+5. let
+6. try
    1. catch
    2. finally
-6. export
+7. export
+8. import
 
 The following are also special forms that CAN be used as higher order
 functions, but won't work the same way you'd expect.
