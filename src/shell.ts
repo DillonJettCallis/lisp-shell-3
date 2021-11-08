@@ -1,6 +1,6 @@
 import { Interpreter } from './interpreter';
 import { initCoreLib } from './lib/coreLib';
-import { isCollection } from 'immutable';
+import { isCollection, isList } from 'immutable';
 import { createInterface } from 'readline';
 import { Loader } from './loader';
 import { inspect } from 'util';
@@ -41,7 +41,7 @@ export class Shell {
 
                 console.log(`$${id}:`, `${extra}${result}`);
               } else {
-                const obj = isCollection(result)
+                const obj = isList(result)
                   ? result.toJS()
                   : result;
 

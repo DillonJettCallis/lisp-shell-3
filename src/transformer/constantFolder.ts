@@ -20,7 +20,7 @@ export class ConstantFolder implements Visitor {
       const newBody = ex.body.toKeyedSeq()
         .mapKeys(key => (key as unknown as ValueExpression).value)
         .map(value => (value as unknown as ValueExpression).value)
-        .toOrderedMap();
+        .toMap();
 
       return new ValueExpression(ex.loc, false, newBody);
     } else {
