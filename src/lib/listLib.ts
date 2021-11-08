@@ -12,6 +12,7 @@ export function initListLib(builder: GlobalScopeBuilder): void {
   builder.addFunction('list/flatMap', listFlatMap);
   builder.addFunction('list/filter', listFilter);
   builder.addFunction('list/fold', listFold);
+  builder.addFunction('list/forEach', listForEach);
   builder.addFunction('list/range', listRange);
   builder.addFunction('list/take', listTake);
   builder.addFunction('list/drop', listDrop);
@@ -160,6 +161,25 @@ function listFold(args: List<RuntimeType>, loc: Location): RuntimeType {
   }
 
   return list.reduce((prev, next) => func(List([prev, next]), loc), init);
+}
+
+function listForEach(args: List<RuntimeType>, loc: Location): RuntimeType {
+  if (args.size !== 2) {
+    return loc.fail('list/forEach expected exactly two arguments, a list, and a function');
+  }
+
+  const [list, func] = args;
+
+  if (!isList(list)) {
+    return loc.fail('list/forEach expected first argument to be a list');
+  }
+
+  if (!isNormalFunction(func)) {
+    return loc.fail('list/forEach expected second argument to be a function');
+  }
+
+  list.forEach(it => func(List([it]), loc));
+  return null;
 }
 
 function listTake(args: List<RuntimeType>, loc: Location): RuntimeType {

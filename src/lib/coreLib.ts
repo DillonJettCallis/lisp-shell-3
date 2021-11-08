@@ -18,6 +18,7 @@ import { initMapLib } from './mapLib';
 import { initMathLib } from './mathLib';
 import { initSeqLib } from './seqLib';
 import { initMetaLib } from './metaLib';
+import { initStringLib } from './stringLib';
 
 export class GlobalScopeBuilder {
   private dict = new Map<string, RuntimeType>();
@@ -68,6 +69,7 @@ export function initCoreLib(): GlobalScope {
   builder.addFunction('echo', doEcho);
 
   initMathLib(builder);
+  initStringLib(builder);
   initShellLib(builder);
   initParseLib(builder);
   initListLib(builder);
