@@ -1,4 +1,4 @@
-import { Expression, Visitor } from './ast';
+import { Expression, Visitor } from './ast.js';
 
 export class TransformerPipeline {
 

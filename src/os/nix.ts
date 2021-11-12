@@ -1,9 +1,9 @@
-import { OsHandler, parseFile } from '../os';
+import { OsHandler, parseFile } from '../os.js';
 import { accessSync, constants as FileConstants, existsSync, readdirSync } from 'fs';
 import { Map as ImmutableMap, Seq } from 'immutable';
-import { EnvFunction } from '../interpreter';
+import { NormalFunction } from '../interpreter.js';
 import { delimiter as osPathDelimiter, sep as osPathSeparator } from 'path';
-import { doBuildShellFunction } from '../lib/shellLib';
+import { doBuildShellFunction } from '../lib/shellLib.js';
 
 export class Nix implements OsHandler {
 
@@ -22,7 +22,7 @@ export class Nix implements OsHandler {
       .toMap();
   }
 
-  loadPath(path: string): ImmutableMap<string, EnvFunction> {
+  loadPath(path: string): ImmutableMap<string, NormalFunction> {
     const dirs = Seq(path.split(osPathDelimiter));
 
     return dirs.flatMap(dir => {

@@ -1,9 +1,9 @@
 import { sep as osPathSeparator } from 'path';
 import { platform } from 'os';
-import { Windows } from './os/windows';
-import { Nix } from './os/nix';
+import { Windows } from './os/windows.js';
+import { Nix } from './os/nix.js';
 import { List, Map as ImmutableMap, Record } from 'immutable';
-import { EnvFunction } from './interpreter';
+import { NormalFunction } from './interpreter.js';
 
 export interface OsHandler {
 
@@ -20,7 +20,7 @@ export interface OsHandler {
   /**
    * From the given path, parse and load up all shell functions available
    */
-  loadPath(path: string): ImmutableMap<string, EnvFunction>
+  loadPath(path: string): ImmutableMap<string, NormalFunction>
 
 }
 

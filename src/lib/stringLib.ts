@@ -1,7 +1,7 @@
-import { GlobalScopeBuilder } from './coreLib';
-import { RuntimeType } from '../runtime';
+import { GlobalScopeBuilder } from './coreLib.js';
+import { RuntimeType } from '../runtime.js';
 import { List } from 'immutable';
-import { Location } from '../ast';
+import { Location } from '../ast.js';
 
 export function initStringLib(builder: GlobalScopeBuilder) {
   builder.addFunction('string/size', stringSize);

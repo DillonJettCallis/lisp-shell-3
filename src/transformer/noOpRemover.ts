@@ -1,4 +1,4 @@
-import { Expression, ListExpression, MapExpression, NoOpExpression, SExpression, Visitor } from '../ast';
+import { Expression, ListExpression, MapExpression, NoOpExpression, SExpression, Visitor } from '../ast.js';
 
 const noOp = NoOpExpression.instance;
 

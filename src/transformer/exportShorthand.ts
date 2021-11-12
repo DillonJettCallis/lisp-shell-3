@@ -2,7 +2,7 @@
  * In:  (export $x)
  * Out: (export $x $x)
  */
-import { Expression, SExpression, Visitor } from '../ast';
+import { Expression, SExpression, Visitor } from '../ast.js';
 
 export class ExportShorthand implements Visitor {
 

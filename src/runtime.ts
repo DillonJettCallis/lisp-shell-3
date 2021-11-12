@@ -1,11 +1,9 @@
 import { List, Map as ImmutableMap, Seq } from 'immutable';
-import { Location } from './ast';
-import { EnvFunction, MacroFunction, markMacro, markNormal, NormalFunction } from './interpreter';
-import { chooseOs } from './os';
-import { resolve as resolvePath } from 'path';
-import { doImport } from './importUtils';
+import { Location } from './ast.js';
+import { markNormal, NormalFunction } from './interpreter.js';
+import { chooseOs } from './os.js';
 
-export type RuntimeType = string | boolean | number | null | NormalFunction | EnvFunction | MacroFunction | List<RuntimeType> | Seq<unknown, RuntimeType> | ImmutableMap<RuntimeType, RuntimeType>
+export type RuntimeType = string | boolean | number | null | NormalFunction | List<RuntimeType> | Seq<unknown, RuntimeType> | ImmutableMap<RuntimeType, RuntimeType>
 
 
 /**
@@ -54,10 +52,13 @@ const os = chooseOs();
 
 export class EnvironmentScope implements Scope {
   private readonly externalEnv = os.loadEnv();
-  private pathed: ImmutableMap<string, EnvFunction>;
+  private pathed = ImmutableMap<string, NormalFunction>();
   private readonly dict = new Map<string, string>();
 
   constructor(private readonly parent: GlobalScope | EnvironmentScope) {
+  }
+
+  loadEnv(): void {
     const path = os.pathVar();
     this.pathed = os.loadPath(path);
 
@@ -168,10 +169,6 @@ export class ShellScope implements Scope {
     return id;
   }
 
-  delete(name: string): void {
-    this.defs.delete(name);
-  }
-
   lookup(name: string, loc: Location): RuntimeType {
     const maybe = this.defs.get(name);
 
@@ -194,8 +191,12 @@ export class ShellScope implements Scope {
     return this.parent.lookup(name, loc);
   }
 
-  environment(): { cwd: string, env: ImmutableMap<string, string> } {
-    return this.parent.environment();
+  environment(): EnvironmentScope {
+    return this.parent;
+  }
+
+  moduleScope(): LibScope | ShellScope {
+    return this;
   }
 
   childScope(): LocalScope {
@@ -208,33 +209,6 @@ export class ShellScope implements Scope {
         this.exit = true;
         return null;
       }),
-      cd: markMacro((args, loc, interpreter, scope) => {
-        if (args.size < 1 || args.size > 2) {
-          return loc.fail('cd function expected either one or two arguments');
-        }
-
-        const init = this.parent.cwd;
-        const [nextEx, maybeActionEx] = args;
-        const next = interpreter.evaluate(nextEx, scope);
-
-        if (typeof next !== 'string') {
-          return loc.fail('Expected first argument to cd to be a string');
-        }
-
-        this.parent.cwd = resolvePath(init, next);
-
-        if (maybeActionEx === undefined) {
-          // leave cwd changed, that's the result of this function
-          return null;
-        } else {
-          try {
-            return interpreter.evaluate(maybeActionEx, scope);
-          } finally {
-            // reset cwd no matter what
-            this.parent.cwd = init;
-          }
-        }
-      }),
       clearResults: markNormal(() => {
         this.results.clear();
         this.resultIndex = 0;
@@ -246,30 +220,15 @@ export class ShellScope implements Scope {
       }),
       listDefs: markNormal(() => List(this.defs.keys())),
       listPath: markNormal(() => this.parent.listPath()),
-      delete: markMacro((args, loc) => {
-        if (args.size !== 1) {
-          return loc.fail('Expected exactly one argument to delete')
-        }
-
-        const nameEx = args.first()!;
-
-        if (nameEx.kind !== 'variable') {
-          return loc.fail('Expected first argument to delete to be a variable');
-        }
-
-        this.defs.delete(nameEx.name);
-        return null;
-      }),
-      import: doImport(this.parent),
     });
   }
 }
 
 export class LibScope implements Scope {
   private readonly exports = new Map<string, RuntimeType>();
-  private readonly defs = new Map<string, RuntimeType>(this.initBuiltIns());
+  private readonly defs = new Map<string, RuntimeType>();
 
-  constructor(private readonly parent: EnvironmentScope, private readonly fileSourceDir: string) {
+  constructor(private readonly parent: EnvironmentScope, public readonly fileSourceDir: string) {
   }
 
   define(name: string, value: RuntimeType): void {
@@ -311,40 +270,16 @@ export class LibScope implements Scope {
     }
   }
 
-  environment(): { cwd: string, env: ImmutableMap<string, string> } {
-    return this.parent.environment();
+  environment(): EnvironmentScope {
+    return this.parent;
+  }
+
+  moduleScope(): LibScope | ShellScope {
+    return this;
   }
 
   childScope(): LocalScope {
     return new LocalScope(this);
-  }
-
-  private initBuiltIns(): ImmutableMap<string, RuntimeType> {
-    return ImmutableMap({
-      cd: markMacro((args, loc, interpreter, scope) => {
-        if (args.size !== 2) {
-          return loc.fail('cd function expected exactly two arguments');
-        }
-
-        const init = this.parent.cwd;
-        const [nextEx, maybeActionEx] = args;
-        const next = interpreter.evaluate(nextEx, scope);
-
-        if (typeof next !== 'string') {
-          return loc.fail('Expected first argument to cd to be a string');
-        }
-
-        this.parent.cwd = resolvePath(init, next);
-
-        try {
-          return interpreter.evaluate(maybeActionEx, scope);
-        } finally {
-          // reset cwd no matter what
-          this.parent.cwd = init;
-        }
-      }),
-      import: doImport(this.parent, this.fileSourceDir),
-    });
   }
 }
 
@@ -368,11 +303,6 @@ export class LocalScope {
     this.parent.export(name, value, loc);
   }
 
-  // only use internally for the shell or the like
-  clear(): void {
-    this.dict.clear();
-  }
-
   lookup(name: string, loc: Location): RuntimeType {
     const maybe = this.dict.get(name);
 
@@ -387,8 +317,8 @@ export class LocalScope {
     }
   }
 
-  environment(): { cwd: string, env: ImmutableMap<string, string> } {
-    return this.parent.environment();
+  moduleScope(): LibScope | ShellScope {
+    return this.parent.moduleScope();
   }
 
   childScope(): LocalScope {

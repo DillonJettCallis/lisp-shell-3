@@ -1,4 +1,4 @@
-import { Expression, ListExpression, MapExpression, ValueExpression, Visitor } from '../ast';
+import { Expression, ListExpression, MapExpression, ValueExpression, Visitor } from '../ast.js';
 
 /**
  * Turns arrays or maps of literals into literals too

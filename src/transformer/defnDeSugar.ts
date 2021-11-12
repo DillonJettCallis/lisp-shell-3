@@ -1,4 +1,4 @@
-import { Expression, SExpression, VariableExpression, Visitor } from '../ast';
+import { Expression, SExpression, VariableExpression, Visitor } from '../ast.js';
 import { List } from 'immutable';
 
 /**

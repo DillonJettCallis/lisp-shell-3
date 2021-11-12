@@ -1,4 +1,4 @@
-import { Expression, SExpression, ValueExpression, VariableExpression, Visitor } from '../ast';
+import { Expression, SExpression, ValueExpression, VariableExpression, Visitor } from '../ast.js';
 
 export class AutoVariable implements Visitor {
   sExpression(ex: SExpression): Expression {

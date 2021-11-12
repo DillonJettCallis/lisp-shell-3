@@ -7,7 +7,7 @@ import {
   Token,
   ValueExpression,
   VariableExpression
-} from './ast';
+} from './ast.js';
 import { List, OrderedMap, Range } from 'immutable';
 
 class Parser {

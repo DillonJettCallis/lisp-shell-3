@@ -1,8 +1,7 @@
 import { Set as ImmutableSet } from 'immutable';
-import { Expression, ListExpression, MapExpression, SExpression, Visitor } from '../ast';
+import { Expression, ListExpression, MapExpression, SExpression, Visitor } from '../ast.js';
 
-const macros = ImmutableSet(['def', 'defn', 'fn', 'let', 'export', 'import', 'try', 'catch', 'finally', '\\'])
-
+const macros = ImmutableSet(['def', 'defn', 'fn', 'let', 'cd', 'export', 'import', 'try', 'catch', 'finally', '\\'])
 
 /**
  * Ensure that a certain list of vars are never declared

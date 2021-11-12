@@ -1,4 +1,4 @@
-import { Location, NumberToken, Token } from './ast';
+import { Location, NumberToken, Token } from './ast.js';
 import { Map as ImmutableMap, Set as ImmutableSet } from 'immutable';
 
 const digits = ImmutableSet('0123456789');

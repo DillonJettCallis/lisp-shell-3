@@ -6,7 +6,7 @@ import {
   ValueExpression,
   VariableExpression,
   Visitor
-} from '../ast';
+} from '../ast.js';
 import { List } from 'immutable';
 
 // input:

@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "A lisp shell",
   "main": "build/dist/main.js",
+  "type": "module",
   "scripts": {
     "clean": "rimraf build/dist",
     "prebuild": "npm run clean",

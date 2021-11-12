@@ -1,7 +1,7 @@
-import { GlobalScopeBuilder } from './coreLib';
+import { GlobalScopeBuilder } from './coreLib.js';
 import { isMap, List } from 'immutable';
-import { RuntimeType } from '../runtime';
-import { Location } from '../ast';
+import { RuntimeType } from '../runtime.js';
+import { Location } from '../ast.js';
 
 export function initMapLib(builder: GlobalScopeBuilder): void {
   builder.addFunction('map/get', mapGet);

@@ -1,8 +1,8 @@
-import { GlobalScopeBuilder } from './coreLib';
+import { GlobalScopeBuilder } from './coreLib.js';
 import { isSeq, List, Range, Seq } from 'immutable';
-import { RuntimeType } from '../runtime';
-import { Location } from '../ast';
-import { isNormalFunction } from '../interpreter';
+import { RuntimeType } from '../runtime.js';
+import { Location } from '../ast.js';
+import { isNormalFunction } from '../interpreter.js';
 
 export function initSeqLib(builder: GlobalScopeBuilder): void {
   builder.addFunction('seq/toList', seqToList);

@@ -1,9 +1,9 @@
-import { OsHandler, parseFile } from '../os';
+import { OsHandler, parseFile } from '../os.js';
 import { List, Map as ImmutableMap, Seq, Set as ImmutableSet } from 'immutable';
-import { EnvFunction } from '../interpreter';
+import { NormalFunction } from '../interpreter.js';
 import { delimiter as osPathDelimiter, sep as osPathSeparator } from 'path';
 import { existsSync, readdirSync } from 'fs';
-import { doBuildShellFunction } from '../lib/shellLib';
+import { doBuildShellFunction } from '../lib/shellLib.js';
 
 export class Windows implements OsHandler {
 
@@ -32,7 +32,7 @@ export class Windows implements OsHandler {
     return path;
   }
 
-  loadPath(path: string): ImmutableMap<string, EnvFunction> {
+  loadPath(path: string): ImmutableMap<string, NormalFunction> {
     const dirs = Seq(path.split(osPathDelimiter));
 
     return dirs.flatMap(dir => {

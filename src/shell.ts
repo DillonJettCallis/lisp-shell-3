@@ -1,17 +1,18 @@
-import { Interpreter } from './interpreter';
-import { initCoreLib } from './lib/coreLib';
+import { Interpreter } from './interpreter.js';
+import { initCoreLib } from './lib/coreLib.js';
 import { isCollection } from 'immutable';
 import { createInterface } from 'readline';
-import { Loader } from './loader';
+import { Loader } from './loader.js';
 import { inspect } from 'util';
 
 export class Shell {
 
   async run(): Promise<void> {
     const loader = new Loader();
-    const interpreter = new Interpreter();
+    const interpreter = new Interpreter(loader);
     const globalScope = initCoreLib();
     const envScope = globalScope.createEnvironment();
+    envScope.loadEnv();
     const shellScope = envScope.createShell();
     const localScope = shellScope.childScope();
 
