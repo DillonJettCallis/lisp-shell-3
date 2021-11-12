@@ -6,6 +6,7 @@ const whitespace = ImmutableSet(' \t\r\n,');
 const symbols = ImmutableSet('()[]{}');
 const quotes = ImmutableSet('\'"`');
 const nonWords = whitespace.concat(symbols, quotes);
+const lineComment = ';';
 
 const escapeMap = ImmutableMap({
   t: '\t',
@@ -219,8 +220,24 @@ class Lexer {
         return null;
       }
 
-      if (!whitespace.includes(result)) {
-        return result;
+      // if we find a line comment character, ignore everything until the line is over
+      if (result === lineComment) {
+        while (true) {
+          const next = this.next();
+
+          if (next == null) {
+            return null;
+          }
+
+          if (next == '\n') {
+            // break from this inner loop and continue the outer one
+            break;
+          }
+        }
+      } else {
+        if (!whitespace.includes(result)) {
+          return result;
+        }
       }
     }
   }
