@@ -50,7 +50,7 @@ export function chooseImportMode(ex: Expression, loc: Location): (localScope: Lo
     return namespacedImport.bind(null, ex.name);
   }
 
-  if (ex.kind === 'arrayExpression') {
+  if (ex.kind === 'listExpression') {
     const names = ex?.body?.map(name => {
       if (name.kind !== 'variable') {
         return name.loc.fail('Expected variable name');

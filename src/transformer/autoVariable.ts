@@ -1,8 +1,8 @@
-import { Expression, SExpression, ValueExpression, VariableExpression, Visitor } from '../ast';
+import { Expression, SExpression, VariableExpression, Visitor } from '../ast';
 
 export class AutoVariable implements Visitor {
   sExpression(ex: SExpression): Expression {
-    if (ex.head instanceof ValueExpression) {
+    if (ex.head.kind === 'value') {
       const head = ex.head;
 
       if (!head.quoted && typeof head.value === 'string') {

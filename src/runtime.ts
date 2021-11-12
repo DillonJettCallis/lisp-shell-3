@@ -168,10 +168,6 @@ export class ShellScope implements Scope {
     return id;
   }
 
-  delete(name: string): void {
-    this.defs.delete(name);
-  }
-
   lookup(name: string, loc: Location): RuntimeType {
     const maybe = this.defs.get(name);
 
@@ -366,11 +362,6 @@ export class LocalScope {
 
   export(name: string, value: RuntimeType, loc: Location): void {
     this.parent.export(name, value, loc);
-  }
-
-  // only use internally for the shell or the like
-  clear(): void {
-    this.dict.clear();
   }
 
   lookup(name: string, loc: Location): RuntimeType {

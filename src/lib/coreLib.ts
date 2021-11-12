@@ -220,7 +220,7 @@ function fnMacro(args: List<Expression>, loc: Location, interpreter: Interpreter
 
   const [paramsEx, body] = args;
 
-  if (paramsEx.kind !== 'arrayExpression') {
+  if (paramsEx.kind !== 'listExpression') {
     return paramsEx.loc.fail(`Expected array of variables but found ${paramsEx.kind}`);
   }
 
@@ -261,7 +261,7 @@ function letMacro(args: List<Expression>, loc: Location, interpreter: Interprete
 
   const [rawArgDefs, body] = args;
 
-  if (!(rawArgDefs instanceof ListExpression)) {
+  if (rawArgDefs.kind !== 'listExpression') {
     return rawArgDefs.loc.fail('Expected a list of either a variable and value, or a list of variable value lists');
   }
 
@@ -271,14 +271,14 @@ function letMacro(args: List<Expression>, loc: Location, interpreter: Interprete
 
   const sample = rawArgDefs.body.first()!;
 
-  const pairs = sample instanceof ListExpression
+  const pairs = sample.kind === 'listExpression'
       ? rawArgDefs.body
-      : sample instanceof VariableExpression
+      : sample.kind === 'variable'
         ? List([rawArgDefs])
         : sample.loc.fail('Expected first argument to let to be either a list of variable value pairs or a single pair');
 
   pairs.forEach(pair => {
-    if (!(pair instanceof ListExpression)) {
+    if (pair.kind !== 'listExpression') {
       return pair.loc.fail('Expected first argument to let to be either a list of variable value pairs or a single pair');
     }
 
@@ -288,7 +288,7 @@ function letMacro(args: List<Expression>, loc: Location, interpreter: Interprete
 
     const [varEx, bodyEx] = pair.body;
 
-    if (!(varEx instanceof VariableExpression)) {
+    if (varEx.kind !== 'variable') {
       return varEx.loc.fail(`Expected a variable but found a ${varEx.kind}`);
     }
 

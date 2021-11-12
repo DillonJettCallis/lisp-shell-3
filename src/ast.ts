@@ -91,7 +91,7 @@ export class SExpression extends Record<{ kind: 'sExpression', loc: Location, he
   }
 }
 
-export class ListExpression extends Record<{kind: 'arrayExpression', loc: Location, body: List<Expression>}>({kind: 'arrayExpression', loc: nullLocation, body: List()}) implements BaseExpression {
+export class ListExpression extends Record<{kind: 'listExpression', loc: Location, body: List<Expression>}>({kind: 'listExpression', loc: nullLocation, body: List()}) implements BaseExpression {
 
   constructor(loc: Location, body: List<Expression>) {
     super({loc, body});

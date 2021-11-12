@@ -56,7 +56,7 @@ export class Interpreter {
         return ex.value;
       case 'variable':
         return scope.lookup(ex.name, ex.loc);
-      case 'arrayExpression':
+      case 'listExpression':
         return ex.body.map(it => this.evaluate(it, scope));
       case 'mapExpression':
         return ex.body.toKeyedSeq()
