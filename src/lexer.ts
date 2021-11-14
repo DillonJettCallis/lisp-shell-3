@@ -94,6 +94,10 @@ class Lexer {
         if (stringBits.length === 0) {
           return [{ kind: 'string', value: workingBit, quoted: true, loc }];
         } else {
+          if (workingBit.length > 0) {
+            stringBits.push({ kind: 'string', quoted: true, value: workingBit, loc: workingLoc });
+          }
+
           return [
             { kind: 'symbol', value: '(', loc},
             { kind: 'variable', value: '&', loc },
@@ -155,11 +159,27 @@ class Lexer {
               }
             }
           }
+        } else if (maybeBrace === '{') {
+          this.next(); // skip
+          const wordLoc = this.location();
+          const word = this.lexWord('');
+
+          const final = this.next();
+
+          if (final !== '}') {
+            return wordLoc.fail('Unclosed bracket in string interpolation.');
+          }
+
+          if (word.length === 0) {
+            return wordLoc.fail('Empty brackets in string interpolation.');
+          }
+
+          stringBits.push({ kind: 'variable', value: word, loc: wordLoc });
         } else {
           const wordLoc = this.location();
           const word = this.lexWord('');
 
-          if (word?.length === 0) {
+          if (word.length === 0) {
             workingBit = '$';
           } else {
             stringBits.push({ kind: 'variable', value: word, loc: wordLoc });
