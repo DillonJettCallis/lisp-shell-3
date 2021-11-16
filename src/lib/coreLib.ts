@@ -9,7 +9,7 @@ import {
   markNormal,
   NormalFunction
 } from '../interpreter';
-import { isCollection, List, Map as ImmutableMap } from 'immutable';
+import { isCollection, isList, List, Map as ImmutableMap } from 'immutable';
 import { Expression, ListExpression, Location, VariableExpression } from '../ast';
 import { initShellLib } from './shellLib';
 import { initListLib } from './listLib';
@@ -220,17 +220,29 @@ function fnMacro(args: List<Expression>, loc: Location, interpreter: Interpreter
 
   const [paramsEx, body] = args;
 
-  if (paramsEx.kind !== 'listExpression') {
-    return paramsEx.loc.fail(`Expected array of variables but found ${paramsEx.kind}`);
+  function getArgumentNames(): List<string> {
+    if (paramsEx.kind === 'value') {
+      const params = paramsEx.value;
+
+      if (isList(params) && params.isEmpty()) {
+        return List();
+      }
+    }
+
+    if (paramsEx.kind !== 'listExpression') {
+      return paramsEx.loc.fail(`Expected array of variables but found ${paramsEx.kind}`);
+    }
+
+    return paramsEx.body.map(param => {
+      if (param.kind !== 'variable') {
+        return param.loc.fail(`Expected variable but found ${param.kind}`);
+      } else {
+        return param.name;
+      }
+    });
   }
 
-  const params = paramsEx.body.map(param => {
-    if (param.kind !== 'variable') {
-      return param.loc.fail(`Expected variable but found ${param.kind}`);
-    } else {
-      return param.name;
-    }
-  });
+  const params = getArgumentNames();
 
   const func: NormalFunction = rawArgs => {
     const localScope = scope.childScope();
